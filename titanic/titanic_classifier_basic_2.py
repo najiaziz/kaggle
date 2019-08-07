@@ -10,7 +10,7 @@ Author: Naji Aziz
 import pandas as pd
 from sklearn.linear_model import LogisticRegression
 from sklearn import preprocessing
-from sklearn.model_selection import KFold
+from sklearn.model_selection import train_test_split
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -71,29 +71,46 @@ for column_name in df_test_clean.columns:
 y = df_train_clean["Survived"]
 X = df_train_clean[["Pclass", "Sex", "Age", "SibSp", "Parch", "Ticket", "Fare", "Embarked"]]
 
+X_train, X_dev, y_train, y_dev = train_test_split(X, y, test_size = 0.2, random_state = 1912) # Split the train set into train and dev 
+
 X_test = df_test_clean[["Pclass", "Sex", "Age", "SibSp", "Parch", "Ticket", "Fare", "Embarked"]]
 
-# Try scaling the data
-X_scaled = X.copy(deep=True)
-age_std_scaler = preprocessing.StandardScaler() # Standard scale the age
-X_scaled[["Age"]] = age_std_scaler.fit_transform(X_scaled[["Age"]])
+# Scaling and normalizing the training data
+X_train_scaled = X_train.copy(deep=True)
+X_dev_scaled = X_dev.copy(deep=True)
+X_test_scaled = X_test.copy(deep=True)
 
-X_scaled.loc[X_scaled.Fare == 0, "Fare"] = 4.0125 # Replace zero fares with next minimum
-X_scaled.Fare = 1/(X_scaled.Fare) # Transform fares to be reciprocal of fare
-#X_scaled[["Fare"]] = np.log((X_scaled[["Fare"]])) # log transformation of fare, inactive
+age_std_scaler = preprocessing.StandardScaler() # Standard scale the age
+X_train_scaled[["Age"]] = age_std_scaler.fit_transform(X_train_scaled[["Age"]])
+
+X_train_scaled.loc[X_train_scaled.Fare == 0, "Fare"] = 4.0125 # Replace zero fares with next minimum
+X_train_scaled.Fare = 1/(X_train_scaled.Fare) # Transform fares to be reciprocal of fare
+#X_scaled[["Fare"]] = np.log((X_train_scaled[["Fare"]])) # log transformation of fare, inactive
+
+# Applying training data scaling to the dev and test sets
+X_dev_scaled[["Age"]] = age_std_scaler.transform(X_dev_scaled[["Age"]])
+X_test_scaled[["Age"]] = age_std_scaler.transform(X_test_scaled[["Age"]])
+
+X_dev_scaled.loc[X_dev_scaled.Fare == 0, "Fare"] = 4.0125 # Replace zero fares with next minimum
+X_dev_scaled.Fare = 1/(X_dev_scaled.Fare) # Transform fares to be reciprocal of fare
+
+X_test_scaled.loc[X_test_scaled.Fare == 0, "Fare"] = 4.0125 # Replace zero fares with next minimum
+X_test_scaled.Fare = 1/(X_test_scaled.Fare) # Transform fares to be reciprocal of fare
+
 
 #sns.distplot((X.Fare))
-#sns.distplot((X_scaled.Fare))
+#sns.distplot((X_dev_scaled.Fare))
 
 # Create and fit model
 logistic_model = LogisticRegression()
-logistic_model.fit(X_scaled, y)
+logistic_model.fit(X_train_scaled, y_train)
 
-# Measure training accuracy
-logistic_model.score(X_scaled, y)
+# Measure training and dev accuracy
+logistic_model.score(X_train_scaled, y_train) # train accuracy
+logistic_model.score(X_dev_scaled, y_dev) # dev accuracy
 
 # Predict on test set
-y_hat = logistic_model.predict(X_test)
+y_hat = logistic_model.predict(X_test_scaled)
 
 # Save csv in required Kaggle format
 results = pd.DataFrame({"PassengerId": df_test_clean.PassengerId, "Survived": y_hat})
