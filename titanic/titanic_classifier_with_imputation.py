@@ -92,7 +92,7 @@ lm.score(X_dev, y_dev)
 y_hat_logit = lm.predict(X_test)
 
 #trying random forest
-rf = RandomForestClassifier(max_features = 4)
+rf = RandomForestClassifier(max_features = 4, min_samples_leaf = 1, min_samples_split = 4, n_estimators = 50)
 rf.fit(X_train, y_train)
 
 rf.score(X_train, y_train)
@@ -103,19 +103,35 @@ rf.fit(X, y)
 
 y_hat_rf = rf.predict(X_test)
 
-#
+''' RF hyperparameter tweaking
 from sklearn.model_selection import GridSearchCV
 
 rf = RandomForestClassifier(max_features='auto', oob_score=True, random_state=1, n_jobs=-1)
 
-param_grid = { "criterion" : ["gini", "entropy"], "min_samples_leaf" : [1, 5, 10], "min_samples_split" : [2, 4, 10, 12, 16], "n_estimators": [50, 100, 400, 700, 1000]}
+param_grid = { "criterion" : ["gini", "entropy"], "min_samples_leaf" : [1, 5], "min_samples_split" : [3, 4, 5, 6], "max_features" : [3, 4, 5], "n_estimators": [50, 100, 400, 700, 1000]}
 
 gs = GridSearchCV(estimator=rf, param_grid=param_grid, scoring='accuracy', cv=3, n_jobs=-1)
-#
+
+gs.fit(X_train, y_train)
+'''
+
+
+'''Trying SVM
+'''
+
+from sklearn.svm import SVC
+svc = SVC()
+svc.fit(X_train, y_train)
+svc.score(X_train, y_train)
+svc.score(X_dev, y_dev)
+svc.fit(X, y)
+
+y_hat_svc = svc.predict(X_test)
+
 
 df_test.PassengerId = df_test.PassengerId.astype(int)
 df_test.loc[df_test.PassengerId == 14,"PassengerId"] = 1044 # odd correction needed
 df_test.info()
 # Save csv in required Kaggle format
-results = pd.DataFrame({"PassengerId": df_test.PassengerId, "Survived": y_hat_rf.astype(np.int)})
+results = pd.DataFrame({"PassengerId": df_test.PassengerId, "Survived": y_hat_svc.astype(np.int)})
 results.to_csv("C:/Users/infra/Documents/kaggle/kaggle-master/titanic/results3.csv", header = True, index = False)

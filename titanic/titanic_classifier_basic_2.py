@@ -16,6 +16,8 @@ from sklearn.model_selection import train_test_split
 #import matplotlib.pyplot as plt
 import seaborn as sns
 
+
+pd.set_option('display.expand_frame_repr', False)
 sns.set(color_codes=True, rc={'figure.figsize':(20,15)})
 
 # Pull data
@@ -60,6 +62,7 @@ y_age_test[y_age_test < 0] = y_age_test.median() # replace negative ages with me
 
 #df_train_no_age = df_train_no_age.drop("Age", axis = 1)
 df_train_no_age["Age"] = y_age_test # AGE FILLING ISNT WORKING
+df_train_no_age["Age"].update = y_age_test # AGE FILLING ISNT WORKING
 
 df_recombined = pd.concat([df_train_yes_age,df_train_no_age], axis = 0, sort=False)
 
